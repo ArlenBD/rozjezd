@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rozjezd</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0E1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rozjezd">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: jeden sloupec, bento dlaždice nahoře, karty pod nimi, čtyři záložky (Dnes, Cesta, Týden, Nastavení). */
+:root{
+  --bg:#EDEFF2; --surface:#FFFFFF; --surface2:#E4E7EC; --line:#D3D8DF;
+  --fg:#14181F; --muted:#5B6572; --accent:#8F6B1E; --accent-fg:#FFFFFF; --accent-soft:rgba(143,107,30,.12);
+  --good:#1F7A4D; --warn:#B4531A; --c0:#2F5D9E; --c1:#1D7A78; --c2:#8F6B1E; --c3:#A8416B;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --f-body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1115; --surface:#161A20; --surface2:#1E232B; --line:#2A313B;
+    --fg:#ECEEF1; --muted:#96A0AD; --accent:#D9B46A; --accent-fg:#1A1406; --accent-soft:rgba(217,180,106,.14);
+    --good:#5CC48A; --warn:#E8925A; --c0:#7FA8E6; --c1:#5CC2BE; --c2:#D9B46A; --c3:#E58AAE; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;
+  padding-inline:16px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(56px + env(safe-area-inset-bottom,0px));-webkit-text-size-adjust:100%}
+.app{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.micro{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:2px;min-width:0}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:40px;line-height:1;letter-spacing:.01em;text-transform:uppercase}
+.vision{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.pill{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;background:var(--surface2);color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.pill.ok i{background:var(--good)} .pill.err i{background:var(--warn)} .pill.wait i{background:var(--accent)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface2);padding:4px;border-radius:12px}
+.tabs button{border:0;background:transparent;padding:10px 4px;border-radius:9px;font-weight:600;color:var(--muted);cursor:pointer;min-height:44px}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+section[hidden]{display:none}
+.stack{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:620px){.bento{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .num{font-family:var(--f-display);font-weight:800;font-size:50px;line-height:1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .num.sm{font-size:32px;overflow-wrap:normal;line-height:1.15}
+.tile .num small{font-size:20px;font-weight:700;color:var(--muted);margin-left:4px}
+.tile .sub{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tile.hot{background:var(--accent-soft);border-color:var(--accent)} .tile.hot .num{color:var(--accent)}
+.tile.good .num{color:var(--good)} .tile.warn .num{color:var(--warn)}
+.banner{border-radius:14px;padding:14px 16px;background:var(--surface2);display:flex;flex-direction:column;gap:2px}
+.banner strong{font-weight:600}
+.banner.good{background:color-mix(in srgb,var(--good) 16%,var(--surface))}
+.banner.warn{background:color-mix(in srgb,var(--warn) 16%,var(--surface))}
+.form{display:flex;gap:8px;flex-wrap:wrap}
+.form input[type=text]{flex:1 1 200px;min-width:0}
+input[type=text],input[type=date],input[type=number],input[type=email],input[type=password],select,textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%;font-size:16px}
+.form input[type=text]{width:auto} select{width:auto;max-width:100%}
+textarea{resize:vertical;min-height:84px}
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;min-height:44px}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+button.link{background:none;border:0;padding:0;color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:32px}
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.item{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:12px;min-width:0}
+.item .txt{flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.item.done .txt{text-decoration:line-through;color:var(--muted)}
+.chk{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;color:transparent;font-weight:800}
+.item.done .chk{background:var(--good);border-color:var(--good);color:#fff}
+.x{flex:none;border:0;background:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;width:32px;height:32px;border-radius:8px}
+.x:hover{background:var(--surface2)}
+.tag{flex:none;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid currentColor;background:none;cursor:pointer}
+.tag.c0{color:var(--c0)} .tag.c1{color:var(--c1)} .tag.c2{color:var(--c2)} .tag.c3{color:var(--c3)}
+.main-mark{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.note{font-size:14px;color:var(--muted)}
+.edit{background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:text;flex:1 1 140px;min-width:0;overflow-wrap:anywhere}
+.edit:hover{text-decoration:underline dotted;text-underline-offset:3px}
+.editin{flex:1 1 140px;min-width:0;padding:6px 10px;min-height:36px}
+.timer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tdisp{font-family:var(--f-display);font-weight:800;font-size:72px;line-height:1;font-variant-numeric:tabular-nums}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:8px 14px;cursor:pointer;font-weight:600;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.strip{display:grid;gap:4px}
+.strip.s14{grid-template-columns:repeat(14,1fr)}
+.strip.s35{grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{aspect-ratio:1;border-radius:6px;background:var(--surface2);display:grid;place-items:center;font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.s14 .cell{aspect-ratio:auto;height:22px;border-radius:5px}
+.cell.on{background:var(--good);color:#fff}
+.cell.miss{background:color-mix(in srgb,var(--warn) 30%,var(--surface2))}
+.cell.today{outline:2px solid var(--accent);outline-offset:1px}
+.cell.fut{opacity:.35}
+.days-h{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar b{display:block;height:100%;background:var(--accent);border-radius:99px}
+.goal h3{font-family:var(--f-display);font-weight:700;font-size:24px;line-height:1.1}
+.status{font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border-radius:6px;background:var(--surface2);color:var(--muted)}
+.status.act{background:var(--accent);color:var(--accent-fg)} .status.ok{background:var(--good);color:#fff}
+.step{background:var(--accent-soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.ns-text{font-size:20px;font-weight:600;line-height:1.3;text-wrap:balance}
+.ns-time{font-family:var(--f-display);font-weight:800;font-size:34px;font-variant-numeric:tabular-nums;color:var(--accent)}
+.stuck-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (max-width:420px){.stuck-opts{grid-template-columns:1fr}}
+.hbar{display:grid;grid-template-columns:120px 1fr 28px;gap:10px;align-items:center;font-size:14px}
+.hbar .bar{height:10px}
+.svgwrap{overflow-x:auto}
+svg text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+svg .bv{fill:var(--accent)} svg .bv.zero{fill:var(--surface2)} svg .tl{stroke:var(--muted);stroke-dasharray:3 3;fill:none}
+label.lbl{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+details.steps{width:100%} details.steps summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;list-style:none}
+details.steps summary::-webkit-details-marker{display:none}
+details.steps textarea{margin-top:8px;min-height:96px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;max-width:calc(100% - 32px);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+.overlay{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.overlay .card{width:100%;max-width:520px;margin-block:auto}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="micro" id="dateLbl">&nbsp;</span>
+      <h1>Rozjezd</h1>
+      <span class="vision" id="visionLbl"></span>
+    </div>
+    <span class="pill wait" id="sync"><i></i><span id="syncTxt">Načítám</span></span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sekce">
+    <button role="tab" data-act="tab" data-tab="dnes" aria-selected="true">Dnes</button>
+    <button role="tab" data-act="tab" data-tab="cesta" aria-selected="false">Cesta</button>
+    <button role="tab" data-act="tab" data-tab="tyden" aria-selected="false">Týden</button>
+    <button role="tab" data-act="tab" data-tab="nast" aria-selected="false">Nastavení</button>
+  </nav>
+
+  <!-- DNES -->
+  <section id="tab-dnes" class="stack">
+    <div class="bento" id="bento"></div>
+    <div class="banner" id="banner"></div>
+    <div class="card" id="nextCard">
+      <div class="row between"><h2>Další krok</h2><div class="chips" id="npChips"></div></div>
+      <div class="step" id="nextBody"></div>
+    </div>
+    <div class="card">
+      <div class="row between"><h2>Plán</h2>
+        <div class="chips" role="group" aria-label="Pro který den plánuješ">
+          <button class="chip" data-act="plan-day" data-d="today" aria-pressed="true">Dnes</button>
+          <button class="chip" data-act="plan-day" data-d="tmr" aria-pressed="false">Zítra</button>
+        </div>
+      </div>
+      <p class="note">Maximálně 3 věci na den. Víc ti jen dá důvod nezačít. První v seznamu je ta hlavní. Klikni na text a upravíš ho.</p>
+      <form class="form" id="taskForm" autocomplete="off">
+        <input type="text" id="taskText" placeholder="Co konkrétně uděláš?" maxlength="140" aria-label="Nový úkol">
+        <select id="taskArea" aria-label="Oblast"></select>
+        <button class="btn primary" type="submit" id="taskAdd">Přidat</button>
+      </form>
+      <ul class="list" id="taskList"></ul>
+    </div>
+    <div class="card">
+      <h2>Soustředění</h2>
+      <div class="timer">
+        <div class="tdisp" id="tDisp">25:00</div>
+        <div class="stack" style="gap:10px;align-items:flex-start">
+          <div class="chips" id="tChips"></div>
+          <div class="row" id="tBtns"></div>
+        </div>
+      </div>
+      <form class="form" id="manualForm" autocomplete="off">
+        <input type="number" id="manMin" min="1" max="600" placeholder="Minuty navíc" style="flex:0 1 150px;width:150px" aria-label="Minuty soustředění ručně">
+        <button class="btn" type="submit">Přičíst minuty</button>
+      </form>
+      <p class="note">Během časovače jen jedna věc. Telefon mimo dosah. Minuty se ti počítají do dnešního minima. Když časovač zastavíš dřív, odpracované minuty se přičtou.</p>
+    </div>
+    <div class="card">
+      <div class="row between"><h2>Zasekl jsem se</h2><button class="btn" data-act="stuck-open">Pomoz mi začít</button></div>
+      <div id="stuckPanel" hidden></div>
+    </div>
+  </section>
+
+  <!-- CESTA -->
+  <section id="tab-cesta" class="stack" hidden>
+    <div class="banner"><strong>Jeden cíl naráz.</strong><span class="note">Aktivní je první cíl, který ještě není hotový. Ostatní čekají. Ke každému kroku si můžeš rozepsat malé kroky na 10 minut, přesně ty se pak ukazují v kartě Další krok.</span></div>
+    <div class="stack" id="goals"></div>
+    <div class="card">
+      <h2>Nový cíl</h2>
+      <form class="form" id="goalForm" autocomplete="off">
+        <input type="text" id="goalText" placeholder="Například: Vlastní e-shop" maxlength="80" aria-label="Název cíle">
+        <button class="btn primary" type="submit">Přidat cíl</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Nový krok</h2>
+      <form class="form" id="itemForm" autocomplete="off">
+        <select id="itemGoal" aria-label="Cíl"></select>
+        <select id="itemArea" aria-label="Oblast"></select>
+        <select id="itemType" aria-label="Typ úkolu"></select>
+        <input type="text" id="itemText" placeholder="Další krok k tomuhle cíli" maxlength="140" aria-label="Nový krok">
+        <button class="btn primary" type="submit">Přidat krok</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- TÝDEN -->
+  <section id="tab-tyden" class="stack" hidden>
+    <div class="bento" id="wkBento"></div>
+    <div class="card"><h2>Minuty soustředění, posledních 7 dní</h2><div class="svgwrap" id="chart"></div></div>
+    <div class="card"><h2>Řetěz, posledních 5 týdnů</h2>
+      <div class="days-h micro"><span>po</span><span>út</span><span>st</span><span>čt</span><span>pá</span><span>so</span><span>ne</span></div>
+      <div class="strip s35" id="grid35"></div>
+      <p class="note">Zelený den = aspoň jeden hotový úkol nebo krok, nebo minimum minut. Jeden prázdný den se stane. Dva po sobě už jsou začátek konce, proto se po vynechání zapni hned.</p>
+    </div>
+    <div class="card"><h2>Co mě zastavuje</h2><div class="stack" style="gap:8px" id="stuckStats"></div></div>
+    <div class="card">
+      <h2>Týdenní zhodnocení</h2>
+      <p class="note" id="rvWeek"></p>
+      <label class="lbl" for="rvWin">Co se mi povedlo<textarea id="rvWin"></textarea></label>
+      <label class="lbl" for="rvBlock">Co mi bránilo<textarea id="rvBlock"></textarea></label>
+      <label class="lbl" for="rvNext">Jedna priorita na příští týden<textarea id="rvNext"></textarea></label>
+    </div>
+  </section>
+
+  <!-- NASTAVENÍ -->
+  <section id="tab-nast" class="stack" hidden>
+    <div class="card">
+      <h2>Moje nastavení</h2>
+      <label class="lbl" for="setVision">Moje vize (jedna věta, proč to děláš)<input type="text" id="setVision" maxlength="140"></label>
+      <div class="grid2">
+        <label class="lbl" for="setA1">Oblast 1<input type="text" id="setA1" maxlength="20"></label>
+        <label class="lbl" for="setA2">Oblast 2<input type="text" id="setA2" maxlength="20"></label>
+        <label class="lbl" for="setA3">Oblast 3 (nepovinná)<input type="text" id="setA3" maxlength="20"></label>
+        <label class="lbl" for="setA4">Oblast 4 (nepovinná)<input type="text" id="setA4" maxlength="20"></label>
+      </div>
+      <div class="grid2">
+        <label class="lbl" for="setDLabel">Důležitý termín (název)<input type="text" id="setDLabel" maxlength="40" placeholder="Například: zkouška"></label>
+        <label class="lbl" for="setDate">Datum termínu<input type="date" id="setDate"></label>
+        <label class="lbl" for="setMin">Denní minimum soustředění, minut<input type="number" id="setMin" min="5" max="240" step="5"></label>
+        <label class="lbl" for="setReward">Moje odměna po minimu<input type="text" id="setReward" maxlength="30" placeholder="Například: seriál"></label>
+      </div>
+    </div>
+    <div class="card" id="syncCard">
+      <h2>Synchronizace mezi zařízeními</h2>
+      <p class="note" id="syncNote"></p>
+      <div id="syncForm">
+        <div class="grid2">
+          <label class="lbl" for="syEmail">E-mail<input type="email" id="syEmail" autocomplete="username"></label>
+          <label class="lbl" for="syPass">Heslo (aspoň 6 znaků)<input type="password" id="syPass" autocomplete="current-password"></label>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" data-act="sy-in">Přihlásit</button>
+          <button class="btn" data-act="sy-up">Vytvořit účet</button>
+        </div>
+      </div>
+      <div class="row" id="syOut" hidden><span class="note" id="syWho"></span><button class="btn" data-act="sy-out">Odhlásit</button></div>
+    </div>
+    <div class="card">
+      <h2>Záloha</h2>
+      <p class="note">Na iPhonu: otevři appku v Safari, klepni na Sdílet a zvol Přidat na plochu. Na Macu: v Safari Sdílet, Přidat do Docku (nebo v Chromu Nainstalovat).</p>
+      <p class="note">Data jsou v tomto zařízení vždy. Zálohu si můžeš stáhnout do souboru a nahrát ji v jiném zařízení.</p>
+      <div class="row"><button class="btn" data-act="bk-save">Stáhnout zálohu</button><button class="btn" data-act="bk-load">Nahrát zálohu</button></div>
+      <input type="file" id="bkFile" accept="application/json,.json" hidden>
+    </div>
+  </section>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div class="overlay" id="onb" hidden>
+  <div class="card">
+    <h2>Vítej v Rozjezdu</h2>
+    <p class="note">Appka ti každý den ukáže jeden malý krok, ať nemusíš přemýšlet, čím začít. Nejdřív si nastav, co řešíš. Všechno půjde později změnit.</p>
+    <label class="lbl" for="obVision">Čeho chceš dosáhnout? Jedna věta<input type="text" id="obVision" maxlength="140" placeholder="Například: mít vlastní firmu"></label>
+    <div class="grid2">
+      <label class="lbl" for="obA1">Oblast 1<input type="text" id="obA1" maxlength="20" placeholder="Například: Škola"></label>
+      <label class="lbl" for="obA2">Oblast 2<input type="text" id="obA2" maxlength="20" placeholder="Například: Zdraví"></label>
+      <label class="lbl" for="obA3">Oblast 3 (nepovinná)<input type="text" id="obA3" maxlength="20" placeholder="Například: Projekt"></label>
+      <label class="lbl" for="obMin">Denní minimum, minut<input type="number" id="obMin" min="5" max="240" step="5" value="20"></label>
+    </div>
+    <button class="btn primary" data-act="onb-go">Začít</button>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
